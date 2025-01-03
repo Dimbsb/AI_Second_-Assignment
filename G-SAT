@@ -100,8 +100,31 @@ void display3SATProblem(const vector<vector<int>>& clauses) {
     cout << endl;
 }
 
+// Υπολογισμός κόστους κατάστασης
+int calculateCost(const vector<vector<int>>& clauses, const vector<bool>& assignment) {
+    int cost = 0;
+    for (const auto& clause : clauses) {
+        bool clauseSatisfied = false;
+        for (int literal : clause) {
+            int varIndex = abs(literal) - 1;
+            bool value = (literal > 0) ? assignment[varIndex] : !assignment[varIndex];
+            if (value) {
+                clauseSatisfied = true;
+                break;
+            }
+        }
+        if (!clauseSatisfied) {
+            ++cost; // Αύξηση κόστους αν ο όρος δεν ικανοποιείται
+        }
+    }
+    return cost;
+}
+
 // GSAT Algorithm
-vector<bool> GSAT(const vector<vector<int>>& clauses, int numVariables, int maxTries, int maxFlips) {
+vector<bool> GSAT(const vector<vector<int>>& clauses, int numVariables, int maxTries, int maxFlips, int& bestCost) {
+    bestCost = numClauses; // Αρχικό κόστος: ο μέγιστος αριθμός μη ικανοποιημένων όρων
+    vector<bool> bestAssignment;
+
     for (int i = 1; i <= maxTries; ++i) {
         // Step 1: Generate a random assignment
         vector<bool> assignment(numVariables);
@@ -110,46 +133,25 @@ vector<bool> GSAT(const vector<vector<int>>& clauses, int numVariables, int maxT
         }
 
         for (int j = 1; j <= maxFlips; ++j) {
-            // Step 2: Check if the assignment satisfies all clauses
-            int satisfiedClauses = 0;
-            for (const auto& clause : clauses) {
-                bool clauseSatisfied = false;
-                for (int literal : clause) {
-                    int varIndex = abs(literal) - 1;
-                    bool value = (literal > 0) ? assignment[varIndex] : !assignment[varIndex];
-                    if (value) {
-                        clauseSatisfied = true;
-                        break;
-                    }
-                }
-                if (clauseSatisfied) ++satisfiedClauses;
+            int currentCost = calculateCost(clauses, assignment);
+            if (currentCost < bestCost) {
+                bestCost = currentCost;
+                bestAssignment = assignment;
             }
-            if (satisfiedClauses == clauses.size()) {
-                return assignment; // Satisfying assignment found
+            if (bestCost == 0) {
+                return bestAssignment; // Βρέθηκε λύση
             }
 
             // Step 3: Find the best variable to flip
-            int maxSatisfiedClauses = -1;
+            int minCost = currentCost;
             int bestVar = -1;
 
             for (int var = 0; var < numVariables; ++var) {
                 vector<bool> tempAssignment = assignment;
                 tempAssignment[var] = !tempAssignment[var]; // Flip the variable
-                int tempSatisfiedClauses = 0;
-                for (const auto& clause : clauses) {
-                    bool clauseSatisfied = false;
-                    for (int literal : clause) {
-                        int varIndex = abs(literal) - 1;
-                        bool value = (literal > 0) ? tempAssignment[varIndex] : !tempAssignment[varIndex];
-                        if (value) {
-                            clauseSatisfied = true;
-                            break;
-                        }
-                    }
-                    if (clauseSatisfied) ++tempSatisfiedClauses;
-                }
-                if (tempSatisfiedClauses > maxSatisfiedClauses) {
-                    maxSatisfiedClauses = tempSatisfiedClauses;
+                int tempCost = calculateCost(clauses, tempAssignment);
+                if (tempCost < minCost) {
+                    minCost = tempCost;
                     bestVar = var;
                 }
             }
@@ -160,7 +162,7 @@ vector<bool> GSAT(const vector<vector<int>>& clauses, int numVariables, int maxT
             }
         }
     }
-    return {}; // No satisfying assignment found
+    return bestAssignment;
 }
 
 // Main Function
@@ -188,9 +190,10 @@ int main() {
         cout << "Generated 3-SAT Problem:\n";
         display3SATProblem(problem);
 
-        vector<bool> result = GSAT(problem, numVariables, maxTries, maxFlips);
+        int bestCost;
+        vector<bool> result = GSAT(problem, numVariables, maxTries, maxFlips, bestCost);
 
-        if (!result.empty()) {
+        if (bestCost == 0) {
             cout << "\nSatisfying assignment found:\n";
             for (size_t i = 0; i < result.size(); ++i) {
                 cout << "x" << i + 1 << ": " << (result[i] ? "True" : "False") << "\n";
@@ -198,6 +201,8 @@ int main() {
         } else {
             cout << "\nNo satisfying assignment found.\n";
         }
+
+        cout << "Best cost: " << bestCost << "\n";
     }
 
     return 0;
