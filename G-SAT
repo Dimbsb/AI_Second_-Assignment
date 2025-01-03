@@ -1,0 +1,204 @@
+#include <iostream>
+#include <vector>
+#include <unordered_set>
+#include <algorithm>
+#include <cstdlib>
+#include <ctime>
+#include <sstream>
+
+using namespace std;
+
+// Global variables for parameters
+int numVariables, numClauses, maxTries, maxFlips, numProblems;
+double negativeProbability;
+
+// Δημιουργία τυχαίου literal με βάση την πιθανότητα εμφάνισης αρνητικού literal
+int generateLiteral() {
+    int literal = rand() % numVariables + 1; // Από 1 έως numVariables
+    if (static_cast<double>(rand()) / RAND_MAX < negativeProbability) {
+        literal = -literal; // Κάνουμε το literal αρνητικό
+    }
+    return literal;
+}
+
+// Έλεγχος εγκυρότητας όρου
+bool isClauseValid(const vector<int>& clause) {
+    unordered_set<int> seen;
+    for (int literal : clause) {
+        if (seen.count(-literal)) {
+            return false; // Υπάρχει σύγκρουση (π.χ., P και ¬P)
+        }
+        if (seen.count(literal)) {
+            return false; // Το ίδιο literal εμφανίζεται πάνω από μία φορά
+        }
+        seen.insert(literal);
+    }
+    return true;
+}
+
+// Μετατροπή όρου σε μοναδική μορφή string για έλεγχο διπλοτύπων
+string clauseToString(const vector<int>& clause) {
+    vector<int> sortedClause = clause;
+    sort(sortedClause.begin(), sortedClause.end()); // Ταξινόμηση για αποφυγή ισοδύναμων όρων
+    stringstream ss;
+    for (int lit : sortedClause) {
+        ss << lit << " ";
+    }
+    return ss.str();
+}
+
+// Δημιουργία μοναδικών, έγκυρων τυχαίων 3-SAT προβλημάτων
+vector<vector<int>> generate3SATProblem() {
+    vector<vector<int>> clauses(numClauses, vector<int>(3)); // Δισδιάστατος πίνακας C*3
+    unordered_set<string> uniqueClauses;
+
+    int clauseCount = 0;
+    while (clauseCount < numClauses) {
+        vector<int> clause(3);
+
+        // Γεννήστε literals
+        for (int i = 0; i < 3; ++i) {
+            clause[i] = generateLiteral();
+        }
+
+        // Ελέγξτε αν ο όρος είναι έγκυρος
+        if (!isClauseValid(clause)) {
+            continue;
+        }
+
+        // Δημιουργήστε το string του όρου για έλεγχο μοναδικότητας
+        string clauseStr = clauseToString(clause);
+
+        if (uniqueClauses.count(clauseStr)) {
+            continue; // Ήδη υπάρχει
+        }
+
+        // Προσθήκη όρου στη λίστα
+        clauses[clauseCount] = clause; // Αποθήκευση στον πίνακα
+        uniqueClauses.insert(clauseStr);
+        clauseCount++;
+    }
+
+    return clauses;
+}
+
+// Εμφάνιση προβλήματος 3-SAT
+void display3SATProblem(const vector<vector<int>>& clauses) {
+    for (size_t i = 0; i < clauses.size(); ++i) {
+        cout << "(";
+        for (size_t j = 0; j < clauses[i].size(); ++j) {
+            cout << (clauses[i][j] > 0 ? "x" : "~x") << abs(clauses[i][j]);
+            if (j < clauses[i].size() - 1) {
+                cout << " V ";
+            }
+        }
+        cout << ")";
+        if (i < clauses.size() - 1) {
+            cout << " AND ";
+        }
+    }
+    cout << endl;
+}
+
+// GSAT Algorithm
+vector<bool> GSAT(const vector<vector<int>>& clauses, int numVariables, int maxTries, int maxFlips) {
+    for (int i = 1; i <= maxTries; ++i) {
+        // Step 1: Generate a random assignment
+        vector<bool> assignment(numVariables);
+        for (int k = 0; k < numVariables; ++k) {
+            assignment[k] = rand() % 2; // Randomly assign true or false
+        }
+
+        for (int j = 1; j <= maxFlips; ++j) {
+            // Step 2: Check if the assignment satisfies all clauses
+            int satisfiedClauses = 0;
+            for (const auto& clause : clauses) {
+                bool clauseSatisfied = false;
+                for (int literal : clause) {
+                    int varIndex = abs(literal) - 1;
+                    bool value = (literal > 0) ? assignment[varIndex] : !assignment[varIndex];
+                    if (value) {
+                        clauseSatisfied = true;
+                        break;
+                    }
+                }
+                if (clauseSatisfied) ++satisfiedClauses;
+            }
+            if (satisfiedClauses == clauses.size()) {
+                return assignment; // Satisfying assignment found
+            }
+
+            // Step 3: Find the best variable to flip
+            int maxSatisfiedClauses = -1;
+            int bestVar = -1;
+
+            for (int var = 0; var < numVariables; ++var) {
+                vector<bool> tempAssignment = assignment;
+                tempAssignment[var] = !tempAssignment[var]; // Flip the variable
+                int tempSatisfiedClauses = 0;
+                for (const auto& clause : clauses) {
+                    bool clauseSatisfied = false;
+                    for (int literal : clause) {
+                        int varIndex = abs(literal) - 1;
+                        bool value = (literal > 0) ? tempAssignment[varIndex] : !tempAssignment[varIndex];
+                        if (value) {
+                            clauseSatisfied = true;
+                            break;
+                        }
+                    }
+                    if (clauseSatisfied) ++tempSatisfiedClauses;
+                }
+                if (tempSatisfiedClauses > maxSatisfiedClauses) {
+                    maxSatisfiedClauses = tempSatisfiedClauses;
+                    bestVar = var;
+                }
+            }
+
+            // Step 4: Flip the value of the chosen variable
+            if (bestVar != -1) {
+                assignment[bestVar] = !assignment[bestVar];
+            }
+        }
+    }
+    return {}; // No satisfying assignment found
+}
+
+// Main Function
+int main() {
+    srand(static_cast<unsigned int>(time(0))); // Seed for randomness
+
+    cout << "Enter the number of variables: ";
+    cin >> numVariables;
+    cout << "Enter the number of clauses: ";
+    cin >> numClauses;
+    cout << "Enter the probability of a negative literal (0 to 1): ";
+    cin >> negativeProbability;
+    cout << "Enter maxTries: ";
+    cin >> maxTries;
+    cout << "Enter maxFlips: ";
+    cin >> maxFlips;
+    cout << "Enter the number of problems: ";
+    cin >> numProblems;
+
+    for (int problemIndex = 1; problemIndex <= numProblems; ++problemIndex) {
+        cout << "\nProblem " << problemIndex << ":\n";
+
+        vector<vector<int>> problem = generate3SATProblem();
+
+        cout << "Generated 3-SAT Problem:\n";
+        display3SATProblem(problem);
+
+        vector<bool> result = GSAT(problem, numVariables, maxTries, maxFlips);
+
+        if (!result.empty()) {
+            cout << "\nSatisfying assignment found:\n";
+            for (size_t i = 0; i < result.size(); ++i) {
+                cout << "x" << i + 1 << ": " << (result[i] ? "True" : "False") << "\n";
+            }
+        } else {
+            cout << "\nNo satisfying assignment found.\n";
+        }
+    }
+
+    return 0;
+}
