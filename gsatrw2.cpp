@@ -10,12 +10,12 @@ using namespace std;
 
 // Global variables for parameters
 int numProblems, numVariables, numClauses, maxTries, maxFlips;
-double negativeProbability, a;
+double p, a;
 
 // Δημιουργία τυχαίου literal με βάση την πιθανότητα εμφάνισης αρνητικού literal
 int generateLiteral() {
     int literal = rand() % numVariables + 1; // Από 1 έως numVariables
-    if (static_cast<double>(rand()) / RAND_MAX < negativeProbability) {
+    if (static_cast<double>(rand()) / RAND_MAX < p) {
         literal = -literal; // Κάνουμε το literal αρνητικό
     }
     return literal;
@@ -126,21 +126,21 @@ int computeCost(const vector<vector<int>>& clauses, const vector<int>& assignmen
 // GSAT + RW
 vector<int> gsatRW(const vector<vector<int>>& clauses, int maxTries, int maxFlips, double p) {
     vector<int> bestAssignment;
-    int bestCost = clauses.size(); // Αρχικά το κόστος είναι ο αριθμός των όρων
+    int minCost = clauses.size();   //Αρχικοποίηση του κόστους με το πλήθος των όρων
 
-    for (int t = 0; t < maxTries; ++t) {
+    for (int t = 0; t < maxTries; ++t) {    //Επαναλήψεις προσπαθειών    
         vector<int> assignment(numVariables);
         for (int i = 0; i < numVariables; ++i) {
-            assignment[i] = rand() % 2; // 0 ή 1
+            assignment[i] = rand() % 2;     //Ανάθεση τιμής 0 ή 1
         }
 
         for (int f = 0; f < maxFlips; ++f) {
             vector<int> unsatisfiedClauses;
             int currentCost = computeCost(clauses, assignment, unsatisfiedClauses);
 
-            if (currentCost == 0) {
-                cout << "Best cost found: " << currentCost << endl;
-                return assignment;
+            if (currentCost == 0) {     //Αν δεν υπάρχει false όρος
+                cout << "Cost: " << currentCost << endl;
+                return assignment;      //επιστροφή λύσης 
             }
 
             int chosenVariable;
@@ -173,18 +173,16 @@ vector<int> gsatRW(const vector<vector<int>>& clauses, int maxTries, int maxFlip
 
             assignment[chosenVariable] = 1 - assignment[chosenVariable];
 
-            if (currentCost < bestCost) {
-                bestCost = currentCost;
+            if (currentCost < minCost) {
+                minCost = currentCost;
                 bestAssignment = assignment;
             }
         }
     }
 
-    cout << "Best cost found: " << bestCost << endl;
+    cout << "Cost: " << minCost << endl;
     return bestAssignment;
 }
-
-// ---------------- Κύριο Πρόγραμμα ----------------
 
 int main() {
     srand(static_cast<unsigned int>(time(0))); // Τυχαία αρχικοποίηση
@@ -195,13 +193,13 @@ int main() {
     cin >> numVariables;
     cout << "Enter the number of clauses (C): ";
     cin >> numClauses;
-    cout << "Enter the probability of a negative literal (e.g., 0.5): ";
-    cin >> negativeProbability;
+    cout << "Enter the probability p (0-1) (eg. 0.2): ";
+    cin >> p;
     cout << "Enter maxTries: ";
     cin >> maxTries;
     cout << "Enter maxFlips: ";
     cin >> maxFlips;
-    cout << "Enter parameter a (e.g., 0.1): ";
+    cout << "Enter parameter a (0-1) (eg. 0.8): ";
     cin >> a;
 
     if (numClauses > (numVariables * (numVariables-1) * (numVariables-2)) / 6) {
@@ -221,7 +219,7 @@ int main() {
             for (int val : solution) {
                 cout << val << " ";
             }
-            cout << endl;
+            cout << endl << endl;
         } else {
             cout << "No solution found." << endl;
         }
