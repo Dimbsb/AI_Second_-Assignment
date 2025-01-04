@@ -13,10 +13,10 @@ using namespace std;
 int NumberofProblems; // Number of 3-SAT problems to generate
 int NumberofVariables; // Number of variables in each problem
 int NumberofClauses; // Number of clauses in each problem
-int maxTries; // Maximum attempts for WalkSAT
-int maxFlips; // Maximum variable flips per try
+int maxTries; // Maximum attempts 
+int maxFlips; // Maximum flips 
 double negativeProbability; // Probability of generating negative literals
-double p; // Probability for random walk in WalkSAT
+double p; // Probability for random walk 
 double a; // Parameter for semi-infinite initial state creation
 
 ////////////////////////////////////////////////////////////////////////
@@ -148,7 +148,52 @@ bool getValidInput() {
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////3SAT-PROBLEM-GENERATOR//////////////////////////
 /////////////////////////////////////////////////////////////////////////
+
 /////////////////////////////////////////////////////////////////////////
+/////////////////////////////COMMON-FUNCTIONS////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+//This function is used in all of three algorithms in order to compute the cost
+int calculateCost(const vector<vector<int>> &clauses, const vector<bool> &assignment) {
+    int cost = 0;
+    for (const auto &clause : clauses) {
+        bool clauseSatisfied = false;
+
+        // Evaluate the clause
+        for (int literal : clause) {
+            int variableIndex = abs(literal) - 1; // Get variable index (0-based)
+            bool variableValue = assignment[variableIndex]; // Get assignment for this variable
+            
+            // Negate value if literal is negative
+            if (literal < 0) {
+                variableValue = !variableValue;
+            }
+
+            if (variableValue) {
+                clauseSatisfied = true; // Clause is satisfied if any literal is true
+                break;
+            }
+        }
+
+        if (!clauseSatisfied) {
+            cost++; // Increment cost for unsatisfied clause
+        }
+    }
+    return cost; // Return total unsatisfied clauses (cost)
+}
+
+//This function is used in all of three algorithms in order to display the result-solution
+void displayAssignment(const vector < bool > & assignment) {
+    cout << "Solution: ";
+    for (size_t i = 0; i < assignment.size(); i++) {
+        cout << "x" << (i + 1) << "=" << assignment[i] << " "; // Display the assignment of each variable
+    }
+    cout << endl;
+}
+
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////COMMON-FUNCTIONS////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////WALKSAT/////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
@@ -239,58 +284,50 @@ int selectVariable(const vector < int > & clause, vector < bool > & assignment, 
 }
 
 // WalkSAT algorithm implementation
-vector<bool> walkSAT(const vector<vector<int>>& clauses) {
-    int bestCost = NumberofClauses;
+vector<bool> walkSAT(const vector<vector<int>> &clauses) {
     vector<bool> bestAssignment;
+    int bestCost = clauses.size();
 
-    for (int try_count = 0; try_count < maxTries; try_count++) {
-        vector<bool> assignment = generateRandomAssignment(); // A := randomly chosen assignment of the variables in a
+    for (int i = 1; i <= maxTries; ++i) { //for i :=1 to maxTries do
+        
+        vector<bool> assignment = generateRandomAssignment(); // Random assignment for the variables
 
-        for (int flip_count = 0; flip_count < maxFlips; flip_count++) {
-            int currentCost = NumberofClauses - countSatisfiedClauses(clauses, assignment);
+        for (int j = 1; j <= maxFlips; ++j) { //for j:=1 to maxFlips do
+            int currentCost = calculateCost(clauses, assignment);
+
+            // If the current cost is better (lower) than the best cost, update best assignment and cost
             if (currentCost < bestCost) {
                 bestCost = currentCost;
                 bestAssignment = assignment;
             }
 
             if (currentCost == 0) {
-                cout << "Solution found with cost: 0" << endl;
-                return assignment; // if A satisfies a then return (A)
+                return assignment; // Solution found
             }
 
             vector<int> unsatisfiedClauses;
-            for (size_t i = 0; i < clauses.size(); i++) {
-                if (!evaluateClause(clauses[i], assignment)) {
-                    unsatisfiedClauses.push_back(i); // c := randomly chosen unsatisfied clause
+            for (size_t i = 0; i < clauses.size(); i++) { // Find all unsatisfied clauses
+                if (calculateCost({clauses[i]}, assignment) > 0) { 
+                    unsatisfiedClauses.push_back(i);
                 }
             }
 
-            int clauseIndex = unsatisfiedClauses[rand() % unsatisfiedClauses.size()];
+            int clauseIndex = unsatisfiedClauses[rand() % unsatisfiedClauses.size()]; //  c := randomly chosen unsatisfied clause
+
             int varToFlip = selectVariable(clauses[clauseIndex], assignment, clauses); // x := choose a variable in c using a heuristic
+
             assignment[varToFlip] = !assignment[varToFlip]; // flip value of x in A
         }
     }
 
-    if (!bestAssignment.empty()) {
-        cout << "Best state found with cost: " << bestCost << endl;
-        return bestAssignment;
-    } else {
-        cout << "No solution found after maximum tries. Best cost: " << bestCost << endl;
-        return {}; // return (“No model found”)
-    }
+    cout << "Best cost found by WalkSAT: " << bestCost << endl;
+    return bestAssignment; // No solution found
 }
 
-//This function displays the solution
-void displayAssignment(const vector < bool > & assignment) {
-    cout << "Solution: ";
-    for (size_t i = 0; i < assignment.size(); i++) {
-        cout << "x" << (i + 1) << "=" << assignment[i] << " "; // Display the assignment of each variable
-    }
-    cout << endl;
-}
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////WALKSAT/////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
+
 /////////////////////////////////////////////////////////////////////////
 //////////////////////////////WALKSATWITH-A//////////////////////////////
 /////////////////////////////////////////////////////////////////////////
@@ -307,48 +344,48 @@ vector<bool> generateRandomAssignmentWalkWithA() {
 
 // WalkSAT algorithm implementation with (a)
 vector<bool> walkSATwithA(const vector<vector<int>>& clauses) {
-    int bestCost = NumberofClauses;
     vector<bool> bestAssignment;
+    int bestCost = clauses.size();
 
-    for (int try_count = 0; try_count < maxTries; try_count++) {
-        vector<bool> assignment = generateRandomAssignmentWalkWithA(); // A := randomly chosen assignment of the variables in a
+    for (int i = 1; i <= maxTries; ++i) { //for i :=1 to maxTries do
+        vector<bool> assignment = generateRandomAssignmentWalkWithA(); // Step 1: A := randomly chosen assignment of the variables in 'a'
 
-        for (int flip_count = 0; flip_count < maxFlips; flip_count++) {
-            int currentCost = NumberofClauses - countSatisfiedClauses(clauses, assignment);
+        for (int j = 1; j <= maxFlips; ++j) { //for j:=1 to maxFlips do
+            int currentCost = calculateCost(clauses, assignment);
+            
+            // If the current cost is better (lower) than the best cost, update best assignment and cost
             if (currentCost < bestCost) {
                 bestCost = currentCost;
                 bestAssignment = assignment;
             }
 
             if (currentCost == 0) {
-                cout << "Solution found with cost: 0" << endl;
-                return assignment; // if A satisfies a then return (A)
+                return assignment; // Solution found
             }
 
             vector<int> unsatisfiedClauses;
-            for (size_t i = 0; i < clauses.size(); i++) {
-                if (!evaluateClause(clauses[i], assignment)) {
-                    unsatisfiedClauses.push_back(i); // c := randomly chosen unsatisfied clause
+            for (size_t i = 0; i < clauses.size(); i++) { // Find all unsatisfied clauses
+                if (calculateCost({clauses[i]}, assignment) > 0) { 
+                    unsatisfiedClauses.push_back(i);
                 }
             }
 
-            int clauseIndex = unsatisfiedClauses[rand() % unsatisfiedClauses.size()];
+            int clauseIndex = unsatisfiedClauses[rand() % unsatisfiedClauses.size()]; //  c := randomly chosen unsatisfied clause
+
             int varToFlip = selectVariable(clauses[clauseIndex], assignment, clauses); // x := choose a variable in c using a heuristic
+
             assignment[varToFlip] = !assignment[varToFlip]; // flip value of x in A
         }
     }
 
-    if (!bestAssignment.empty()) {
-        cout << "Best state found with cost: " << bestCost << endl;
-        return bestAssignment;
-    } else {
-        cout << "No solution found after maximum tries. Best cost: " << bestCost << endl;
-        return {}; // return (“No model found”)
-    }
+    cout << "Best cost found by WalkSATwithA: " << bestCost << endl;
+    return bestAssignment; // No solution found
 }
+
 /////////////////////////////////////////////////////////////////////////
 //////////////////////////////WALKSATWITH-A//////////////////////////////
 /////////////////////////////////////////////////////////////////////////
+
 
 //Main function
 int main() {
@@ -367,9 +404,9 @@ int main() {
         cout << "\n3-SAT Problem " << i + 1 << ":\n";
         vector < vector < int >> problem = generate3SATProblem();
         display3SATProblem(problem);
+        cout << endl; 
 
         cout << "Starting walkSAT: "<< endl;
-        cout << endl;
         vector < bool > solution = walkSAT(problem); // Solve the problem using WalkSAT
 
         if (!solution.empty()) {
@@ -378,8 +415,8 @@ int main() {
             cout << "No solution found after maximum tries." << endl;
         }
 
+        cout << endl; 
         cout << "Starting walkSATwithA: "<< endl;
-        cout << endl;
         vector < bool > solution1 = walkSATwithA(problem); // Solve the problem using WalkSAT with a
 
         if (!solution1.empty()) {
@@ -387,6 +424,7 @@ int main() {
         } else {
             cout << "No solution found after maximum tries." << endl;
         }
+
     }
     return 0;
 }
