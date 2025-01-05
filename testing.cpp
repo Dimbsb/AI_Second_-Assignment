@@ -10,13 +10,13 @@
 using namespace std;
 
 // Initialization of Global variables
-int NumberofProblems; // Number of 3-SAT problems to generate
+int NumberofProblems; // Number of 3-SAT problems 
 int NumberofVariables; // Number of variables in each problem
 int NumberofClauses; // Number of clauses in each problem
-int maxTries; // Maximum attempts 
+int maxTries; // Maximum tries 
 int maxFlips; // Maximum flips 
-double negativeProbability; // Probability of generating negative literals
-double p; // Probability for random walk 
+double literalProbability; // Probability of generating negative literals
+double p; // Probability of random walk 
 double a; // Parameter for semi-infinite initial state creation
 
 ////////////////////////////////////////////////////////////////////////
@@ -26,8 +26,8 @@ double a; // Parameter for semi-infinite initial state creation
 //This function generates a random literal (positive or negative variable)
 int LiteralGeneration() {
   int literal = rand() % NumberofVariables + 1; //We generate a random variable index between 1 and NumberofVariables
-  if (static_cast < double > (rand()) / RAND_MAX < negativeProbability) { //Randomly decide the literal (negative-positive)
-    literal = -literal; //Make literal negative with probability based on negativeProbability
+  if (static_cast < double > (rand()) / RAND_MAX < literalProbability) { //Randomly decide the literal (negative-positive)
+    literal = -literal; //Make literal negative with probability based on literalProbability
   }
   return literal; // Return the generated literal
 }
@@ -98,7 +98,7 @@ void display3SATProblem(const vector < vector < int >> & clauses) {
 }
 
 //In this function we practically aim into getting valid input from user as far as the parameters are concerned
-//We check for input validation at variables like (NumberofProblems, NumberofVariables, NumberofClauses, negativeProbability,maxFlips, maxTries, p)
+//We check for input validation at variables like (NumberofProblems, NumberofVariables, NumberofClauses, literalProbability,maxFlips, maxTries, p)
 bool InputValidation() {
 
   do {
@@ -118,8 +118,8 @@ bool InputValidation() {
 
   do {
     cout << "Enter negative literal probability (0-1): ";
-    cin >> negativeProbability;
-  } while (negativeProbability < 0 || negativeProbability > 1);
+    cin >> literalProbability;
+  } while (literalProbability < 0 || literalProbability > 1);
 
   do {
     cout << "Enter maxTries: ";
@@ -151,8 +151,7 @@ bool InputValidation() {
 /////////////////////////////COMMON-FUNCTIONS////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 //This function is used in all of three algorithms in order to compute the cost
-int calculateCost(const vector < vector < int >> & clauses,
-  const vector < bool > & assignment) {
+int calculateCost(const vector < vector < int >> & clauses, const vector < bool > & assignment) {
   int cost = 0;
   for (const auto & clause: clauses) {
     bool clauseSatisfied = false;
@@ -189,6 +188,24 @@ void displayAssignment(const vector < bool > & assignment) {
   cout << endl;
 }
 
+//In this function we generate random initial assignments
+vector < bool > generateRandomAssignment() {
+  vector < bool > assignment(NumberofVariables); //Here we hold variable assignments
+  for (int i = 0; i < NumberofVariables; i++) {
+    assignment[i] = rand() % 2; // Randomly assign true/false
+  }
+  return assignment; // Return the random assignment
+}
+
+//In this function we generate random initial assignments with semi-infinite initial state creation
+vector < bool > generateRandomAssignmentWalkWithA() {
+  vector < bool > assignment(NumberofVariables); //Here we hold variable assignments
+  for (int i = 0; i < NumberofVariables; i++) {
+    assignment[i] = static_cast < double > (rand()) / RAND_MAX < a; // Assign true/false based on parameter 'a'
+  }
+  return assignment; // Return the random assignment
+}
+
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////COMMON-FUNCTIONS////////////////////////////
 /////////////////////////////////////////////////////////////////////////
@@ -202,12 +219,9 @@ vector < bool > GSAT(const vector < vector < int >> & clauses, int numVariables,
   bestCost = NumberofClauses; // Αρχικό κόστος: ο μέγιστος αριθμός μη ικανοποιημένων όρων
   vector < bool > bestAssignment;
 
-  for (int i = 1; i <= maxTries; ++i) {
-    // Step 1: Generate a random assignment
-    vector < bool > assignment(numVariables);
-    for (int k = 0; k < numVariables; ++k) {
-      assignment[k] = rand() % 2; // Randomly assign true or false
-    }
+    for (int i = 1; i <= maxTries; ++i) { //for i :=1 to maxTries do
+
+    vector < bool > assignment = generateRandomAssignment(); // Random assignment for the variables
 
     for (int j = 1; j <= maxFlips; ++j) {
       int currentCost = calculateCost(clauses, assignment);
@@ -245,6 +259,7 @@ vector < bool > GSAT(const vector < vector < int >> & clauses, int numVariables,
 /////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////GSAT//////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
+
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////GSAT+RW////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
@@ -344,14 +359,7 @@ vector < bool > GSATwithRW(const vector < vector < int >> & clauses, int & bestC
 /////////////////////////////////WALKSAT/////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
-//In this function we generate random initial assignments
-vector < bool > generateRandomAssignment() {
-  vector < bool > assignment(NumberofVariables); //Here we hold variable assignments
-  for (int i = 0; i < NumberofVariables; i++) {
-    assignment[i] = rand() % 2; // Randomly assign true/false
-  }
-  return assignment; // Return the random assignment
-}
+
 
 //This function evaluates if a clause is satisfied by the current assignment (True/False)
 //Just like calculate cost but checking one clause
@@ -376,7 +384,7 @@ int countSatisfiedClauses(const vector < vector < int >> & clauses,
   const vector < bool > & assignment) {
   int count = 0;
   for (const auto & clause: clauses) {
-    if (evaluateClause(clause, assignment)) count++;
+    if (evaluateClause(clause, assignment)) count++; //index between 1 and NumberofVariables
   }
   return count;
 }
@@ -488,15 +496,6 @@ vector < bool > walkSAT(const vector < vector < int >> & clauses) {
 /////////////////////////////////////////////////////////////////////////
 //////////////////////////////WALKSATWITH-A//////////////////////////////
 /////////////////////////////////////////////////////////////////////////
-
-//In this function we generate random initial assignments with semi-infinite initial state creation
-vector < bool > generateRandomAssignmentWalkWithA() {
-  vector < bool > assignment(NumberofVariables); //Here we hold variable assignments
-  for (int i = 0; i < NumberofVariables; i++) {
-    assignment[i] = static_cast < double > (rand()) / RAND_MAX < a; // Assign true/false based on parameter 'a'
-  }
-  return assignment; // Return the random assignment
-}
 
 // WalkSAT algorithm implementation with (a)
 vector < bool > walkSATwithA(const vector < vector < int >> & clauses) {
