@@ -47,13 +47,13 @@ bool ClauseValidation(const vector < int > & clause) {
 
 //In this function we convert clause into string in order to check if it is unique
 string clauseToString(const vector < int > & clause) {
-    vector<int> sortedClause = clause;
-    sort(sortedClause.begin(), sortedClause.end());
-    string encoding = "C";
-    for (int literal : sortedClause) {
-        encoding += " " + to_string(literal); 
-    }
-    return encoding; 
+  vector < int > sortedClause = clause;
+  sort(sortedClause.begin(), sortedClause.end());
+  string encoding = "C";
+  for (int literal: sortedClause) {
+    encoding += " " + to_string(literal);
+  }
+  return encoding;
 }
 
 //In this function we practically generate a random 3-SAT problem according to the instructions of the exercise
@@ -151,7 +151,8 @@ bool InputValidation() {
 /////////////////////////////COMMON-FUNCTIONS////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 //This function is used in all of three algorithms in order to compute the cost
-int calculateCost(const vector < vector < int >> & clauses, const vector < bool > & assignment) {
+int calculateCost(const vector < vector < int >> & clauses,
+  const vector < bool > & assignment) {
   int cost = 0;
   for (const auto & clause: clauses) {
     bool clauseSatisfied = false;
@@ -197,48 +198,48 @@ void displayAssignment(const vector < bool > & assignment) {
 /////////////////////////////////////////////////////////////////////////
 
 // GSAT Algorithm
-vector<bool> GSAT(const vector<vector<int>>& clauses, int numVariables, int maxTries, int maxFlips, int& bestCost) {
-    bestCost = NumberofClauses; // Αρχικό κόστος: ο μέγιστος αριθμός μη ικανοποιημένων όρων
-    vector<bool> bestAssignment;
+vector < bool > GSAT(const vector < vector < int >> & clauses, int numVariables, int maxTries, int maxFlips, int & bestCost) {
+  bestCost = NumberofClauses; // Αρχικό κόστος: ο μέγιστος αριθμός μη ικανοποιημένων όρων
+  vector < bool > bestAssignment;
 
-    for (int i = 1; i <= maxTries; ++i) {
-        // Step 1: Generate a random assignment
-        vector<bool> assignment(numVariables);
-        for (int k = 0; k < numVariables; ++k) {
-            assignment[k] = rand() % 2; // Randomly assign true or false
-        }
-
-        for (int j = 1; j <= maxFlips; ++j) {
-            int currentCost = calculateCost(clauses, assignment);
-            if (currentCost < bestCost) {
-                bestCost = currentCost;
-                bestAssignment = assignment;
-            }
-            if (bestCost == 0) {
-                return bestAssignment; // Βρέθηκε λύση
-            }
-
-            // Step 3: Find the best variable to flip
-            int minCost = currentCost;
-            int bestVariable = -1;
-
-            for (int variable = 0; variable < numVariables; ++variable) {
-                vector<bool> tempAssignment = assignment;
-                tempAssignment[variable] = !tempAssignment[variable]; // Flip the variable
-                int tempCost = calculateCost(clauses, tempAssignment);
-                if (tempCost < minCost) {
-                    minCost = tempCost;
-                    bestVariable = variable;
-                }
-            }
-
-            // Step 4: Flip the value of the chosen variable
-            if (bestVariable != -1) {
-                assignment[bestVariable] = !assignment[bestVariable];
-            }
-        }
+  for (int i = 1; i <= maxTries; ++i) {
+    // Step 1: Generate a random assignment
+    vector < bool > assignment(numVariables);
+    for (int k = 0; k < numVariables; ++k) {
+      assignment[k] = rand() % 2; // Randomly assign true or false
     }
-    return bestAssignment;
+
+    for (int j = 1; j <= maxFlips; ++j) {
+      int currentCost = calculateCost(clauses, assignment);
+      if (currentCost < bestCost) {
+        bestCost = currentCost;
+        bestAssignment = assignment;
+      }
+      if (bestCost == 0) {
+        return bestAssignment; // Βρέθηκε λύση
+      }
+
+      // Step 3: Find the best variable to flip
+      int minCost = currentCost;
+      int bestVariable = -1;
+
+      for (int variable = 0; variable < numVariables; ++variable) {
+        vector < bool > tempAssignment = assignment;
+        tempAssignment[variable] = !tempAssignment[variable]; // Flip the variable
+        int tempCost = calculateCost(clauses, tempAssignment);
+        if (tempCost < minCost) {
+          minCost = tempCost;
+          bestVariable = variable;
+        }
+      }
+
+      // Step 4: Flip the value of the chosen variable
+      if (bestVariable != -1) {
+        assignment[bestVariable] = !assignment[bestVariable];
+      }
+    }
+  }
+  return bestAssignment;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -249,84 +250,90 @@ vector<bool> GSAT(const vector<vector<int>>& clauses, int numVariables, int maxT
 /////////////////////////////////////////////////////////////////////////
 
 // GSAT with Random Walk (GSAT+RW) Algorithm Implementation
-vector<bool> GSATwithRW(const vector<vector<int>>& clauses, int& bestCost) {
-    // Initialize best cost to worst possible value (all clauses unsatisfied)
-    bestCost = NumberofClauses;
-    vector<bool> bestAssignment;
+vector < bool > GSATwithRW(const vector < vector < int >> & clauses, int & bestCost) {
+  // Initialize best cost to worst possible value (all clauses unsatisfied)
+  bestCost = NumberofClauses;
+  vector < bool > bestAssignment;
 
-    // for i := 1 to maxTries do
-    for (int i = 1; i <= maxTries; ++i) {
-        // A := randomly chosen assignment of the variables in a
-        // Generate initial assignment based on parameter 'a'
-        vector<bool> assignment(NumberofVariables);
-        for (int k = 0; k < NumberofVariables; ++k) {
-            assignment[k] = static_cast<double>(rand()) / RAND_MAX < a;
-        }
-
-        // for j := 1 to maxFlips do
-        for (int j = 1; j <= maxFlips; ++j) {
-            // Calculate current cost and update best solution if better
-            int currentCost = calculateCost(clauses, assignment);
-            if (currentCost < bestCost) {
-                bestCost = currentCost;
-                bestAssignment = assignment;
-            }
-
-            // if A satisfies a then return (A)
-            if (currentCost == 0) {
-                return assignment; // Solution found
-            }
-
-            // with probability p set
-            if (static_cast<double>(rand()) / RAND_MAX < p) {
-                // x := variable whose flip satisfies the maximum number of clauses
-                int bestVariable = -1;
-                int maxSatisfied = -1;
-
-                // Try flipping each variable and count satisfied clauses
-                for (int var = 0; var < NumberofVariables; var++) {
-                    vector<bool> tempAssignment = assignment;
-                    tempAssignment[var] = !tempAssignment[var];
-                    int satisfiedCount = clauses.size() - calculateCost(clauses, tempAssignment);
-                    
-                    if (satisfiedCount > maxSatisfied) {
-                        maxSatisfied = satisfiedCount;
-                        bestVariable = var;
-                    }
-                }
-
-                // Flip the variable that satisfies maximum clauses
-                if (bestVariable != -1) {
-                    assignment[bestVariable] = !assignment[bestVariable];
-                }
-            }
-            // with probability 1-p set
-            else {
-                // Find unsatisfied clauses
-                vector<int> unsatisfiedClauses;
-                for (size_t k = 0; k < clauses.size(); k++) {
-                    if (calculateCost({clauses[k]}, assignment) > 0) {
-                        unsatisfiedClauses.push_back(k);
-                    }
-                }
-
-                if (!unsatisfiedClauses.empty()) {
-                    // x := randomly selected variable appearing in a false clause
-                    int randomClauseIdx = unsatisfiedClauses[rand() % unsatisfiedClauses.size()];
-                    const vector<int>& falseClause = clauses[randomClauseIdx];
-                    
-                    // Select random variable from the false clause
-                    int randomLiteral = falseClause[rand() % falseClause.size()];
-                    int randomVar = abs(randomLiteral) - 1;
-                    
-                    // flip value of x in A
-                    assignment[randomVar] = !assignment[randomVar];
-                }
-            }
-        }
+  // for i := 1 to maxTries do
+  for (int i = 1; i <= maxTries; ++i) {
+    // A := randomly chosen assignment of the variables in a
+    // Generate initial assignment based on parameter 'a'
+    vector < bool > assignment(NumberofVariables);
+    for (int k = 0; k < NumberofVariables; ++k) {
+      assignment[k] = static_cast < double > (rand()) / RAND_MAX < a;
     }
 
-    return bestAssignment; // Return best assignment found if no solution
+    // for j := 1 to maxFlips do
+    for (int j = 1; j <= maxFlips; ++j) {
+      // Calculate current cost and update best solution if better
+      int currentCost = calculateCost(clauses, assignment);
+      if (currentCost < bestCost) {
+        bestCost = currentCost;
+        bestAssignment = assignment;
+      }
+
+      // if A satisfies a then return (A)
+      if (currentCost == 0) {
+        return assignment; // Solution found
+      }
+
+      // with probability p set
+      if (static_cast < double > (rand()) / RAND_MAX < p) {
+        // x := variable whose flip satisfies the maximum number of clauses
+        int bestVariable = -1;
+        int maxSatisfied = -1;
+
+        // Try flipping each variable and count satisfied clauses
+        for (int
+          var = 0;
+          var < NumberofVariables;
+          var ++) {
+          vector < bool > tempAssignment = assignment;
+          tempAssignment[var] = !tempAssignment[var];
+          int satisfiedCount = clauses.size() - calculateCost(clauses, tempAssignment);
+
+          if (satisfiedCount > maxSatisfied) {
+            maxSatisfied = satisfiedCount;
+            bestVariable =
+              var;
+          }
+        }
+
+        // Flip the variable that satisfies maximum clauses
+        if (bestVariable != -1) {
+          assignment[bestVariable] = !assignment[bestVariable];
+        }
+      }
+      // with probability 1-p set
+      else {
+        // Find unsatisfied clauses
+        vector < int > unsatisfiedClauses;
+        for (size_t k = 0; k < clauses.size(); k++) {
+          if (calculateCost({
+              clauses[k]
+            }, assignment) > 0) {
+            unsatisfiedClauses.push_back(k);
+          }
+        }
+
+        if (!unsatisfiedClauses.empty()) {
+          // x := randomly selected variable appearing in a false clause
+          int randomClauseIdx = unsatisfiedClauses[rand() % unsatisfiedClauses.size()];
+          const vector < int > & falseClause = clauses[randomClauseIdx];
+
+          // Select random variable from the false clause
+          int randomLiteral = falseClause[rand() % falseClause.size()];
+          int randomVar = abs(randomLiteral) - 1;
+
+          // flip value of x in A
+          assignment[randomVar] = !assignment[randomVar];
+        }
+      }
+    }
+  }
+
+  return bestAssignment; // Return best assignment found if no solution
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -348,7 +355,8 @@ vector < bool > generateRandomAssignment() {
 
 //This function evaluates if a clause is satisfied by the current assignment (True/False)
 //Just like calculate cost but checking one clause
-bool evaluateClause(const vector < int > & clause,const vector < bool > & assignment) {
+bool evaluateClause(const vector < int > & clause,
+  const vector < bool > & assignment) {
   for (int literal: clause) {
     int variableIndex = abs(literal) - 1;
     bool variableValue = assignment[variableIndex]; // Get current value of the variable
@@ -364,7 +372,8 @@ bool evaluateClause(const vector < int > & clause,const vector < bool > & assign
 }
 
 //In this function we count the number of satisfied clauses in our problem
-int countSatisfiedClauses(const vector < vector < int >> & clauses, const vector < bool > & assignment) {
+int countSatisfiedClauses(const vector < vector < int >> & clauses,
+  const vector < bool > & assignment) {
   int count = 0;
   for (const auto & clause: clauses) {
     if (evaluateClause(clause, assignment)) count++;
@@ -373,12 +382,14 @@ int countSatisfiedClauses(const vector < vector < int >> & clauses, const vector
 }
 
 // Check if all clauses are satisfied
-bool isSatisfied(const vector < vector < int >> & clauses,const vector < bool > & assignment) {
+bool isSatisfied(const vector < vector < int >> & clauses,
+  const vector < bool > & assignment) {
   return countSatisfiedClauses(clauses, assignment) == clauses.size();
 }
 
 //In this function we select variable to flip using WalkSAT heuristic
-int SelectVariabletoFlip(const vector < int > & clause, vector < bool > & assignment,const vector < vector < int >> & clauses) {
+int SelectVariabletoFlip(const vector < int > & clause, vector < bool > & assignment,
+  const vector < vector < int >> & clauses) {
   vector < int > changedVariables; // Variables that improve the solution
   int currentSatisfied = countSatisfiedClauses(clauses, assignment); // Count currently satisfied clauses
 
@@ -542,67 +553,66 @@ vector < bool > walkSATwithA(const vector < vector < int >> & clauses) {
 //Main function
 int main() {
 
-    srand(static_cast < unsigned int > (time(0)));
+  srand(static_cast < unsigned int > (time(0)));
 
-    if (NumberofClauses > (NumberofVariables * (NumberofVariables - 1) * (NumberofVariables - 2)) / 6) {
-        cout << "Error: Too many clauses requested for given number of variables" << endl;
-        return 1;
+  if (NumberofClauses > (NumberofVariables * (NumberofVariables - 1) * (NumberofVariables - 2)) / 6) {
+    cout << "Error: Too many clauses requested for given number of variables" << endl;
+    return 1;
+  }
+
+  InputValidation();
+
+  // Generate and solve each problem
+  for (int i = 0; i < NumberofProblems; ++i) {
+    cout << "\n3-SAT Problem " << i + 1 << ":\n";
+    vector < vector < int >> problem = generate3SATProblem();
+    display3SATProblem(problem);
+    cout << endl;
+
+    cout << "Starting walkSAT: " << endl;
+    vector < bool > solution = walkSAT(problem); // Solve the problem using WalkSAT
+
+    if (!solution.empty()) {
+      displayAssignment(solution);
+    } else {
+      cout << "No solution found after maximum tries." << endl;
     }
 
-    InputValidation();
+    cout << endl;
+    cout << "Starting walkSATwithA: " << endl;
+    vector < bool > solution1 = walkSATwithA(problem); // Solve the problem using WalkSAT with a
 
-    // Generate and solve each problem
-    for (int i = 0; i < NumberofProblems; ++i) {
-        cout << "\n3-SAT Problem " << i + 1 << ":\n";
-        vector < vector < int >> problem = generate3SATProblem();
-        display3SATProblem(problem);
-        cout << endl; 
-
-        cout << "Starting walkSAT: "<< endl;
-        vector < bool > solution = walkSAT(problem); // Solve the problem using WalkSAT
-
-        if (!solution.empty()) {
-            displayAssignment(solution);
-        } else {
-            cout << "No solution found after maximum tries." << endl;
-        }
-
-        cout << endl; 
-        cout << "Starting walkSATwithA: "<< endl;
-        vector < bool > solution1 = walkSATwithA(problem); // Solve the problem using WalkSAT with a
-
-        if (!solution1.empty()) {
-            displayAssignment(solution1);
-        } else {
-            cout << "No solution found after maximum tries." << endl;
-        }
-
-        int bestCost;
-        vector<bool> result = GSAT(problem, NumberofVariables, maxTries, maxFlips, bestCost); // Solve the problem using gsat
-
-        if (bestCost == 0) {
-            cout << "\nSatisfying assignment found:\n";
-            for (size_t i = 0; i < result.size(); ++i) {
-                cout << "x" << i + 1 << ": " << (result[i] ? "True" : "False") << "\n";
-            }
-        } else {
-            cout << "\nNo satisfying assignment found.\n";
-        }
-
-        cout << "Best cost: " << bestCost << "\n";
-
-
-        cout << "\nStarting GSAT+RW:" << endl;
-
-vector<bool> gsatrwSolution = GSATwithRW(problem, bestCost);
-
-if (!gsatrwSolution.empty()) {
-    cout << "GSAT+RW found solution with cost: " << bestCost << endl;
-    displayAssignment(gsatrwSolution);
-} else {
-    cout << "GSAT+RW: No solution found after maximum tries." << endl;
-}
-
+    if (!solution1.empty()) {
+      displayAssignment(solution1);
+    } else {
+      cout << "No solution found after maximum tries." << endl;
     }
-    return 0;
+
+    int bestCost;
+    vector < bool > result = GSAT(problem, NumberofVariables, maxTries, maxFlips, bestCost); // Solve the problem using gsat
+
+    if (bestCost == 0) {
+      cout << "\nSatisfying assignment found:\n";
+      for (size_t i = 0; i < result.size(); ++i) {
+        cout << "x" << i + 1 << ": " << (result[i] ? "True" : "False") << "\n";
+      }
+    } else {
+      cout << "\nNo satisfying assignment found.\n";
+    }
+
+    cout << "Best cost: " << bestCost << "\n";
+
+    cout << "\nStarting GSAT+RW:" << endl;
+
+    vector < bool > gsatrwSolution = GSATwithRW(problem, bestCost);
+
+    if (!gsatrwSolution.empty()) {
+      cout << "GSAT+RW found solution with cost: " << bestCost << endl;
+      displayAssignment(gsatrwSolution);
+    } else {
+      cout << "GSAT+RW: No solution found after maximum tries." << endl;
+    }
+
+  }
+  return 0;
 }
