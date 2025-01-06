@@ -280,7 +280,7 @@ vector < bool > GSAT(const vector < vector < int >> & clauses, int numVariables,
 /////////////////////////////////////////////////////////////////////////
 
 //GSAT with Random Walk (GSAT+RW) Algorithm
-vector < bool > GSATwithRW(const vector < vector < int >> & clauses, int & bestCost) {
+vector <bool> GSATwithRW(const vector < vector < int >> & clauses, int & bestCost) {
   bestCost = NumberofClauses;       //initialize best cost to worst case scenario value (all clauses unsatisfied)
   vector <bool> bestAssignment;     //vector to store the best assignment found
 
@@ -305,7 +305,7 @@ vector < bool > GSATwithRW(const vector < vector < int >> & clauses, int & bestC
         int maxSatisfied = -1;
 
         // Try flipping each variable and count satisfied clauses
-        for (int variable = 0; variable < NumberofVariables; variable ++) {    //flip each variable
+        for (int variable = 0; variable < NumberofVariables; variable++) {    //flip each variable
           vector <bool> tempAssignment = assignment;                      //create vector for temporary assignment to test flip
           tempAssignment[variable] = !tempAssignment[variable];
           int satisfiedCount = clauses.size() - calculateCost(clauses, tempAssignment);     //calculate satisfied clauses after flipping the variable
