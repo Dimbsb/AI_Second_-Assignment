@@ -307,7 +307,7 @@ vector <bool> GSATwithRW(const vector < vector < int >> & clauses, int & bestCos
         // Try flipping each variable and count satisfied clauses
         for (int variable = 0; variable < NumberofVariables; variable++) {    //flip each variable
           vector <bool> tempAssignment = assignment;                      //create vector for temporary assignment to test flip
-          tempAssignment[variable] = !tempAssignment[variable];
+          tempAssignment[variable] = !tempAssignment[variable];           //flip the current variable
           int satisfiedCount = clauses.size() - calculateCost(clauses, tempAssignment);     //calculate satisfied clauses after flipping the variable
 
           if (satisfiedCount > maxSatisfied) {                            //if the flip satisfies more clauses 
