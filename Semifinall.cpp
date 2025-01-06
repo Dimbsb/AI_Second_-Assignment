@@ -220,43 +220,55 @@ vector < bool > generateRandomAssignmentWalkWithA() {
 
 // GSAT Algorithm
 vector < bool > GSAT(const vector < vector < int >> & clauses, int numVariables, int maxTries, int maxFlips, int & bestCost) {
-  bestCost = NumberofClauses; // Αρχικό κόστος: ο μέγιστος αριθμός μη ικανοποιημένων όρων
+  // Initialize best cost to worst possible value (all clauses unsatisfied)
+  bestCost = NumberofClauses; 
   vector < bool > bestAssignment;
 
-    for (int i = 1; i <= maxTries; ++i) { //for i :=1 to maxTries do
-    vector < bool > assignment = generateRandomAssignment(); // Random assignment for the variables
+    // Step 1: Perform multiple tries to explore different starting points
+    for (int i = 1; i <= maxTries; ++i) { 
+      // Generate a random initial assignment for the variables
+      vector < bool > assignment = generateRandomAssignment(); 
 
-    for (int j = 1; j <= maxFlips; ++j) {
-      int currentCost = calculateCost(clauses, assignment);
-      if (currentCost < bestCost) {
-        bestCost = currentCost;
-        bestAssignment = assignment;
-      }
-      if (bestCost == 0) {
-        return bestAssignment; // Βρέθηκε λύση
-      }
+      // Step 2: Perform a series of flips to try to minimize the cost
+      for (int j = 1; j <= maxFlips; ++j) {
+        int currentCost = calculateCost(clauses, assignment);
+        // Update the best assignment if the current one is better
+        if (currentCost < bestCost) {
+          bestCost = currentCost;
+          bestAssignment = assignment;
+        }
+        // If a solution with no unsatisfied clauses is found, return it
+        if (bestCost == 0) {
+          return bestAssignment; 
+        }
 
-      // Step 3: Find the best variable to flip
-      int minCost = currentCost;
-      int bestVariable = -1;
+        // Step 3: Find the best variable to flip
+        int minCost = currentCost;
+        int bestVariable = -1; // Variable to track the best flip
 
-      for (int variable = 0; variable < numVariables; ++variable) {
-        vector < bool > tempAssignment = assignment;
-        tempAssignment[variable] = !tempAssignment[variable]; // Flip the variable
-        int tempCost = calculateCost(clauses, tempAssignment);
-        if (tempCost < minCost) {
-          minCost = tempCost;
-          bestVariable = variable;
+        // Evaluate the effect of flipping each variable
+        for (int variable = 0; variable < numVariables; ++variable) {
+          // Create a temporary assignment with the current variable flipped
+          vector < bool > tempAssignment = assignment;
+          tempAssignment[variable] = !tempAssignment[variable]; // Flip the variable
+
+          // Calculate the cost of the flipped assignment
+          int tempCost = calculateCost(clauses, tempAssignment);
+
+          // Update the best flip if the flipped assignment reduces the cost
+          if (tempCost < minCost) {
+            minCost = tempCost;
+            bestVariable = variable;
+          }
+        }
+
+        // Step 4: Flip the value of the chosen variable
+        if (bestVariable != -1) {
+          assignment[bestVariable] = !assignment[bestVariable];
         }
       }
-
-      // Step 4: Flip the value of the chosen variable
-      if (bestVariable != -1) {
-        assignment[bestVariable] = !assignment[bestVariable];
-      }
     }
-  }
-  return bestAssignment;
+    return bestAssignment;
 }
 
 /////////////////////////////////////////////////////////////////////////
