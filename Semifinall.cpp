@@ -279,83 +279,70 @@ vector < bool > GSAT(const vector < vector < int >> & clauses, int numVariables,
 /////////////////////////////////GSAT+RW////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
-// GSAT with Random Walk (GSAT+RW) Algorithm Implementation
+//GSAT with Random Walk (GSAT+RW) Algorithm
 vector < bool > GSATwithRW(const vector < vector < int >> & clauses, int & bestCost) {
-  // Initialize best cost to worst possible value (all clauses unsatisfied)
-  bestCost = NumberofClauses;
-  vector < bool > bestAssignment;
+  bestCost = NumberofClauses;       //initialize best cost to worst case scenario value (all clauses unsatisfied)
+  vector <bool> bestAssignment;     //vector to store the best assignment found
 
-  // for i := 1 to maxTries do
-    for (int i = 1; i <= maxTries; ++i) { //for i :=1 to maxTries do
-    vector < bool > assignment = generateRandomAssignment(); // Random assignment for the variables
+    for (int i = 1; i <= maxTries; ++i) {                       //attempt to find solution maxTries times
+    vector <bool> assignment = generateRandomAssignment();      //random assignment for the variables
 
-    // for j := 1 to maxFlips do
-    for (int j = 1; j <= maxFlips; ++j) {
-      // Calculate current cost and update best solution if better
-      int currentCost = calculateCost(clauses, assignment);
-      if (currentCost < bestCost) {
+    for (int j = 1; j <= maxFlips; ++j) {                       //for each try attempt maxFlips times of flip
+      int currentCost = calculateCost(clauses, assignment);     //calculate current assignment's cost
+
+      if (currentCost < bestCost) {                             //update best solution if current solution is better
         bestCost = currentCost;
         bestAssignment = assignment;
       }
 
-      // if A satisfies a then return (A)
-      if (currentCost == 0) {
-        return assignment; // Solution found
+      if (currentCost == 0) {                                   //if all clauses are satisfied (cost=0), solution found
+        return assignment; 
       }
 
-      // with probability p set
-      if (static_cast < double > (rand()) / RAND_MAX < p) {
-        // x := variable whose flip satisfies the maximum number of clauses
+      if (static_cast <double> (rand()) / RAND_MAX < p) {       //based on probability p, use GSAT or GSAT+RW
+        //GSAT
         int bestVariable = -1;
         int maxSatisfied = -1;
 
         // Try flipping each variable and count satisfied clauses
-        for (int var = 0; var < NumberofVariables; var ++) {
-          vector < bool > tempAssignment = assignment;
-          tempAssignment[var] = !tempAssignment[var];
-          int satisfiedCount = clauses.size() - calculateCost(clauses, tempAssignment);
+        for (int variable = 0; variable < NumberofVariables; variable ++) {    //flip each variable
+          vector <bool> tempAssignment = assignment;                      //create vector for temporary assignment to test flip
+          tempAssignment[variable] = !tempAssignment[variable];
+          int satisfiedCount = clauses.size() - calculateCost(clauses, tempAssignment);     //calculate satisfied clauses after flipping the variable
 
-          if (satisfiedCount > maxSatisfied) {
+          if (satisfiedCount > maxSatisfied) {                            //if the flip satisfies more clauses 
             maxSatisfied = satisfiedCount;
-            bestVariable =
-              var;
+            bestVariable = variable;                                      //update best variable
           }
         }
 
-        // Flip the variable that satisfies maximum clauses
-        if (bestVariable != -1) {
+        if (bestVariable != -1) {                               //flip the variable that satisfies max clauses
           assignment[bestVariable] = !assignment[bestVariable];
         }
       }
-      // with probability 1-p set
-      else {
-        // Find unsatisfied clauses
-        vector < int > unsatisfiedClauses;
-        for (size_t k = 0; k < clauses.size(); k++) {
-          if (calculateCost({
-              clauses[k]
-            }, assignment) > 0) {
+      else {                                                    //with probability 1-p
+        //GSAT+RW
+        vector <int> unsatisfiedClauses;                        // Find unsatisfied clauses
+        for (size_t k = 0; k < clauses.size(); k++) {           //check if clause is unsatisfied
+          if (calculateCost({clauses[k]}, assignment) > 0) {
             unsatisfiedClauses.push_back(k);
           }
         }
 
-        if (!unsatisfiedClauses.empty()) {
-          // x := randomly selected variable appearing in a false clause
-          int randomClauseIdx = unsatisfiedClauses[rand() % unsatisfiedClauses.size()];
-          const vector < int > & falseClause = clauses[randomClauseIdx];
+        if (!unsatisfiedClauses.empty()) {                      //if there are unsatisfied clauses
+          int randomClauseIdx = unsatisfiedClauses[rand() % unsatisfiedClauses.size()];     //select randomly an unsatisfied clause
+          const vector <int> & falseClause = clauses[randomClauseIdx];
 
-          // Select random variable from the false clause
-          int randomLiteral = falseClause[rand() % falseClause.size()];
+          int randomLiteral = falseClause[rand() % falseClause.size()];                     //select random variable from the false clause
           int randomVar = abs(randomLiteral) - 1;
 
-          // flip value of x in A
-          assignment[randomVar] = !assignment[randomVar];
+          assignment[randomVar] = !assignment[randomVar];                                   //flip the randomly selected variable
         }
       }
     }
   }
 
-  return bestAssignment; // Return best assignment found if no solution
+  return bestAssignment;    //return best assignment found if no solution
 }
 
 /////////////////////////////////////////////////////////////////////////
