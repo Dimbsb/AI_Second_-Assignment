@@ -539,10 +539,9 @@ int main() { //Main function
 
   // Generate and solve each problem
   for (int i = 0; i < NumberofProblems; ++i) {
-    cout << "\n3-SAT Problem " << i + 1 << ":\n";
+    cout << "________________________________________________" << "\n3-SAT Problem " << i + 1 << ":\n";
     vector < vector < int >> problem = generate3SATProblem();
     display3SATProblem(problem);
-    cout << endl;
 
     int bestCost; 
 
