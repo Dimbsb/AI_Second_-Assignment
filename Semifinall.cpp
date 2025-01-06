@@ -292,7 +292,7 @@ vector <bool> GSATwithRW(const vector < vector < int >> & clauses, int & bestCos
 
       if (currentCost < bestCost) {                             //update best solution if current solution is better
         bestCost = currentCost;
-        bestAssignment = assignment;
+        bestAssignment = assignment;                            //save the bestAssignment so far
       }
 
       if (currentCost == 0) {                                   //if all clauses are satisfied (cost=0), solution found
