@@ -334,9 +334,9 @@ vector <bool> GSATwithRW(const vector < vector < int >> & clauses, int & bestCos
           const vector <int> & falseClause = clauses[randomClauseIdx];
 
           int randomLiteral = falseClause[rand() % falseClause.size()];                     //select random variable from the false clause
-          int randomVar = abs(randomLiteral) - 1;
+          int randomVariable = abs(randomLiteral) - 1;
 
-          assignment[randomVar] = !assignment[randomVar];                                   //flip the randomly selected variable
+          assignment[randomVariable] = !assignment[randomVariable];                         //flip the randomly selected variable
         }
       }
     }
