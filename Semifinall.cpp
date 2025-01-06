@@ -299,7 +299,7 @@ vector < bool > GSATwithRW(const vector < vector < int >> & clauses, int & bestC
         return assignment; 
       }
 
-      if (static_cast <double> (rand()) / RAND_MAX < p) {       //based on probability p, use GSAT or GSAT+RW
+      if ((static_cast<double>(rand()) / RAND_MAX) < p) {       //based on probability p, use GSAT or GSAT+RW
         //GSAT
         int bestVariable = -1;
         int maxSatisfied = -1;
