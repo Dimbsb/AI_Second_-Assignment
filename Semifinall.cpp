@@ -299,13 +299,13 @@ vector <bool> GSATwithRW(const vector < vector < int >> & clauses, int & bestCos
         return assignment; 
       }
 
-      if ((static_cast<double>(rand()) / RAND_MAX) < p) {       //based on probability p, use GSAT or GSAT+RW
+      if ((static_cast <double> (rand()) / RAND_MAX) < p) {       //based on probability p, use GSAT or GSAT+RW
         //GSAT
-        int bestVariable = -1;
+        int bestVariable = -1;                                    
         int maxSatisfied = -1;
 
-        // Try flipping each variable and count satisfied clauses
-        for (int variable = 0; variable < NumberofVariables; variable++) {    //flip each variable
+        //Try flipping each variable and count satisfied clauses
+        for (int variable = 0; variable < NumberofVariables; variable ++) {    //flip each variable
           vector <bool> tempAssignment = assignment;                      //create vector for temporary assignment to test flip
           tempAssignment[variable] = !tempAssignment[variable];           //flip the current variable
           int satisfiedCount = clauses.size() - calculateCost(clauses, tempAssignment);     //calculate satisfied clauses after flipping the variable
@@ -333,8 +333,8 @@ vector <bool> GSATwithRW(const vector < vector < int >> & clauses, int & bestCos
           int randomClauseIdx = unsatisfiedClauses[rand() % unsatisfiedClauses.size()];     //select randomly an unsatisfied clause
           const vector <int> & falseClause = clauses[randomClauseIdx];
 
-          int randomLiteral = falseClause[rand() % falseClause.size()];                     //select random variable from the false clause
-          int randomVariable = abs(randomLiteral) - 1;
+          int randomLiteral = falseClause[rand() % falseClause.size()];                     //select random literal from the false clause
+          int randomVariable = abs(randomLiteral) - 1;                                      //convert the literal from the clause to it's corresponding variable 
 
           assignment[randomVariable] = !assignment[randomVariable];                         //flip the randomly selected variable
         }
