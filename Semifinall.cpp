@@ -321,7 +321,7 @@ vector <bool> GSATwithRW(const vector < vector < int >> & clauses, int & bestCos
         }
       }
       else {                                                    //with probability 1-p
-        //GSAT+RW
+        //RW
         vector <int> unsatisfiedClauses;                        // Find unsatisfied clauses
         for (size_t k = 0; k < clauses.size(); k++) {           //check if clause is unsatisfied
           if (calculateCost({clauses[k]}, assignment) > 0) {
