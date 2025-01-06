@@ -329,7 +329,7 @@ vector <bool> GSATwithRW(const vector < vector < int >> & clauses, int & bestCos
           }
         }
 
-        if (!unsatisfiedClauses.empty()) {                      //if there are unsatisfied clauses
+        if (!unsatisfiedClauses.empty()) {                      //if there are unsatisfied clauses use RW
           int randomClauseIdx = unsatisfiedClauses[rand() % unsatisfiedClauses.size()];     //select randomly an unsatisfied clause
           const vector <int> & falseClause = clauses[randomClauseIdx];
 
